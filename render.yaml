@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: pollo-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ALLOWED_ORIGIN
+        sync: false        # set this manually to your Vercel frontend URL
+      - key: SECRET_KEY
+        generateValue: true
