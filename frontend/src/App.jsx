@@ -11,6 +11,7 @@ import Settings from './pages/Settings'
 import Import from './pages/Import'
 import ImportReview from './pages/ImportReview'
 import SavedPeople from './pages/SavedPeople'
+import Companies from './pages/Companies'
 
 const Placeholder = ({ title }) => (
   <div className="p-8">
@@ -35,7 +36,7 @@ export default function App() {
         >
           <Route index element={<Home />} />
           <Route path="people" element={<People />} />
-          <Route path="companies" element={<Placeholder title="Companies" />} />
+          <Route path="companies" element={<Companies />} />
           <Route path="lists" element={<Placeholder title="Lists" />} />
           <Route path="data-enrichment" element={<Placeholder title="Data Enrichment" />} />
           <Route path="import" element={<Import />} />
