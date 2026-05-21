@@ -36,12 +36,31 @@ class Contact(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class Account(Base):
+    __tablename__ = "accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    name = Column(String, default="")
+    domain = Column(String, default="")
+    industry = Column(String, default="")
+    employee_count = Column(String, default="")
+    city = Column(String, default="")
+    country = Column(String, default="")
+    phone = Column(String, default="")
+    linkedin = Column(String, default="")
+    description = Column(String, default="")
+    founded_year = Column(String, default="")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class ImportHistory(Base):
     __tablename__ = "import_history"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     filename = Column(String, nullable=False)
+    import_type = Column(String, default="contact", server_default="contact")
     total_records = Column(Integer, default=0)
     skipped = Column(Integer, default=0)
     uploaded_by = Column(String, default="")

@@ -66,19 +66,50 @@ class ContactOut(ContactCreate):
 
 class ImportHistoryCreate(BaseModel):
     filename: str
+    import_type: str = "contact"
     total_records: int
     skipped: int = 0
     uploaded_by: str = ""
-    contacts: List[ContactCreate]
+    contacts: List[ContactCreate] = []
 
 
 class ImportHistoryOut(BaseModel):
     id: int
     user_id: int
     filename: str
+    import_type: str
     total_records: int
     skipped: int
     uploaded_by: str
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class AccountCreate(BaseModel):
+    name: str = ""
+    domain: str = ""
+    industry: str = ""
+    employee_count: str = ""
+    city: str = ""
+    country: str = ""
+    phone: str = ""
+    linkedin: str = ""
+    description: str = ""
+    founded_year: str = ""
+
+
+class AccountOut(AccountCreate):
+    id: int
+    user_id: int
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class AccountImportCreate(BaseModel):
+    filename: str
+    total_records: int
+    skipped: int = 0
+    uploaded_by: str = ""
+    accounts: List[AccountCreate]

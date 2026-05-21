@@ -110,10 +110,11 @@ function ImportCard({ type, onDownload }) {
     const reader = new FileReader()
     reader.onload = (ev) => {
       const { headers, rows } = parseCSV(ev.target.result)
-      navigate('/import/review', { state: { headers, rows, filename: file.name } })
+      navigate('/import/review', {
+        state: { headers, rows, filename: file.name, importType: type },
+      })
     }
     reader.readAsText(file)
-    // Reset so the same file can be re-selected
     e.target.value = ''
   }
 
@@ -158,20 +159,18 @@ function ImportCard({ type, onDownload }) {
         </p>
       </div>
 
-      {/* Hidden file input (contacts only) */}
-      {isContacts && (
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-      )}
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        className="hidden"
+        onChange={handleFileChange}
+      />
 
       {/* CSV button */}
       <button
-        onClick={isContacts ? () => fileInputRef.current?.click() : undefined}
+        onClick={() => fileInputRef.current?.click()}
         className={`w-full py-2.5 rounded font-semibold text-sm transition-colors mb-4 ${
           isContacts
             ? 'bg-yellow-400 hover:bg-yellow-300 text-gray-900'

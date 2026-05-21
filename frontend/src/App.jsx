@@ -12,6 +12,7 @@ import Import from './pages/Import'
 import ImportReview from './pages/ImportReview'
 import SavedPeople from './pages/SavedPeople'
 import Companies from './pages/Companies'
+import SavedCompanies from './pages/SavedCompanies'
 
 const Placeholder = ({ title }) => (
   <div className="p-8">
@@ -53,7 +54,7 @@ export default function App() {
           <Route path="website-visitors" element={<Placeholder title="Website Visitors" />} />
           <Route path="forms" element={<Placeholder title="Forms" />} />
           <Route path="saved-people" element={<SavedPeople />} />
-          <Route path="saved-companies" element={<Placeholder title="Saved Companies" />} />
+          <Route path="saved-companies" element={<SavedCompanies />} />
           <Route path="admin-settings" element={<Placeholder title="Admin Settings" />} />
           <Route path="deliverability" element={<Placeholder title="Deliverability Suite" />} />
           <Route path="ai-assistant" element={<AIAssistant />} />

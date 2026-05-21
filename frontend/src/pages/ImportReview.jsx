@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Info, ChevronDown, Settings2, X, FileText, Trash2, Loader2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { importContacts } from '../api/auth'
+import { importContacts, importAccounts } from '../api/auth'
 
-// ─── Apollo field options ─────────────────────────────────────────────────────
+// ─── Contact field options ────────────────────────────────────────────────────
 
-const APOLLO_FIELDS = [
+const CONTACT_FIELDS = [
   '-- Do not import --',
   'contact first name',
   'contact last name',
@@ -24,7 +24,7 @@ const APOLLO_FIELDS = [
   'contact department',
 ]
 
-const FIELD_AUTO_MAP = {
+const CONTACT_AUTO_MAP = {
   'first name':          'contact first name',
   'last name':           'contact last name',
   'title':               'contact title',
@@ -33,6 +33,42 @@ const FIELD_AUTO_MAP = {
   'phone':               'corporate phone',
   'stage':               'contact place state',
   'person linkedin url': 'contact linkedin url',
+}
+
+// ─── Account field options ────────────────────────────────────────────────────
+
+const ACCOUNT_FIELDS = [
+  '-- Do not import --',
+  'account name',
+  'account domain',
+  'account industry',
+  'account employee count',
+  'account city',
+  'account country',
+  'account phone',
+  'account linkedin url',
+  'account description',
+  'account founded year',
+]
+
+const ACCOUNT_AUTO_MAP = {
+  'name':             'account name',
+  'company name':     'account name',
+  'account name':     'account name',
+  'domain':           'account domain',
+  'website':          'account domain',
+  'account website':  'account domain',
+  'industry':         'account industry',
+  'employees':        'account employee count',
+  'employee count':   'account employee count',
+  '# employees':      'account employee count',
+  'city':             'account city',
+  'country':          'account country',
+  'phone':            'account phone',
+  'linkedin':         'account linkedin url',
+  'description':      'account description',
+  'founded':          'account founded year',
+  'founded year':     'account founded year',
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -47,7 +83,10 @@ export default function ImportReview() {
     return null
   }
 
-  const { headers, rows, filename } = state
+  const { headers, rows, filename, importType = 'contacts' } = state
+  const isAccounts = importType === 'accounts'
+  const APOLLO_FIELDS = isAccounts ? ACCOUNT_FIELDS : CONTACT_FIELDS
+  const FIELD_AUTO_MAP = isAccounts ? ACCOUNT_AUTO_MAP : CONTACT_AUTO_MAP
 
   const [mappings, setMappings] = useState(() =>
     Object.fromEntries(
@@ -60,51 +99,70 @@ export default function ImportReview() {
 
   const handleImport = async () => {
     setImporting(true)
-    const contacts = rows.map((row) => {
-      const contact = {}
+    const mapped = rows.map((row) => {
+      const obj = {}
       headers.forEach((h, i) => {
-        const apolloField = mappings[h]
-        if (apolloField && apolloField !== '-- Do not import --') {
-          contact[apolloField] = row[i]
-        }
+        const field = mappings[h]
+        if (field && field !== '-- Do not import --') obj[field] = row[i]
       })
-      return {
-        first_name: contact['contact first name'] || '',
-        last_name: contact['contact last name'] || '',
-        title: contact['contact title'] || '',
-        company: contact['account name'] || '',
-        email: contact['contact email'] || '',
-        phone: contact['corporate phone'] || '',
-        stage: contact['contact place state'] || '',
-        linkedin: contact['contact linkedin url'] || '',
-        twitter: contact['contact twitter url'] || '',
-        website: contact['account website'] || '',
-        city: contact['contact city'] || '',
-        country: contact['contact country'] || '',
-        department: contact['contact department'] || '',
-        mobile: contact['contact mobile phone'] || '',
-      }
+      return obj
     })
 
     try {
-      await importContacts({
-        filename: filename || 'file.csv',
-        total_records: rows.length,
-        skipped: 0,
-        uploaded_by: user?.full_name || user?.email || 'Unknown',
-        contacts,
-      })
-      navigate('/saved-people')
+      if (isAccounts) {
+        const accountList = mapped.map((obj) => ({
+          name:           obj['account name'] || '',
+          domain:         obj['account domain'] || '',
+          industry:       obj['account industry'] || '',
+          employee_count: obj['account employee count'] || '',
+          city:           obj['account city'] || '',
+          country:        obj['account country'] || '',
+          phone:          obj['account phone'] || '',
+          linkedin:       obj['account linkedin url'] || '',
+          description:    obj['account description'] || '',
+          founded_year:   obj['account founded year'] || '',
+        }))
+        await importAccounts({
+          filename: filename || 'file.csv',
+          total_records: rows.length,
+          skipped: 0,
+          uploaded_by: user?.full_name || user?.email || 'Unknown',
+          accounts: accountList,
+        })
+        navigate('/saved-companies')
+      } else {
+        const contactList = mapped.map((obj) => ({
+          first_name: obj['contact first name'] || '',
+          last_name:  obj['contact last name'] || '',
+          title:      obj['contact title'] || '',
+          company:    obj['account name'] || '',
+          email:      obj['contact email'] || '',
+          phone:      obj['corporate phone'] || '',
+          stage:      obj['contact place state'] || '',
+          linkedin:   obj['contact linkedin url'] || '',
+          twitter:    obj['contact twitter url'] || '',
+          website:    obj['account website'] || '',
+          city:       obj['contact city'] || '',
+          country:    obj['contact country'] || '',
+          department: obj['contact department'] || '',
+          mobile:     obj['contact mobile phone'] || '',
+        }))
+        await importContacts({
+          filename: filename || 'file.csv',
+          total_records: rows.length,
+          skipped: 0,
+          uploaded_by: user?.full_name || user?.email || 'Unknown',
+          contacts: contactList,
+        })
+        navigate('/saved-people')
+      }
     } catch (err) {
       console.error('Import failed', err)
       setImporting(false)
     }
   }
 
-  const recognisedCount = headers.filter(
-    (h) => !!FIELD_AUTO_MAP[h.toLowerCase().trim()]
-  ).length
-
+  const recognisedCount = headers.filter((h) => !!FIELD_AUTO_MAP[h.toLowerCase().trim()]).length
   const visibleHeaders = hideRecognised
     ? headers.filter((h) => !FIELD_AUTO_MAP[h.toLowerCase().trim()])
     : headers

@@ -19,4 +19,7 @@ export const importContacts = (data) => api.post('/contacts/import', data)
 export const getContacts = () => api.get('/contacts/')
 export const getImportHistory = () => api.get('/contacts/imports')
 
+export const importAccounts = (data) => api.post('/accounts/import', data)
+export const getAccounts = () => api.get('/accounts/')
+
 export default api
