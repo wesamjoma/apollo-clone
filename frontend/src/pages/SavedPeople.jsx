@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { getContacts } from '../api/auth'
 import {
   Search, ChevronDown, Upload, Plus, Filter, Phone, Mail,
   MoreHorizontal, Linkedin, ArrowUpDown, Settings2, Zap,
@@ -25,8 +26,8 @@ function stageBadge(stage) {
   )
 }
 
-function initials(first, last) {
-  return `${first?.[0] || ''}${last?.[0] || ''}`.toUpperCase() || '?'
+function initials(c) {
+  return `${c.first_name?.[0] || ''}${c.last_name?.[0] || ''}`.toUpperCase() || '?'
 }
 
 function avatarColor(name) {
@@ -47,16 +48,9 @@ export default function SavedPeople() {
 
   useEffect(() => {
     if (!user?.id) return
-    const key = `apollo_saved_people_${user.id}`
-    const oldKey = 'apollo_saved_people'
-    // Migrate data saved before per-user scoping was added
-    const legacy = localStorage.getItem(oldKey)
-    if (legacy && !localStorage.getItem(key)) {
-      localStorage.setItem(key, legacy)
-      localStorage.removeItem(oldKey)
-    }
-    const stored = JSON.parse(localStorage.getItem(key) || '[]')
-    setContacts(stored)
+    getContacts()
+      .then((res) => setContacts(res.data))
+      .catch(() => setContacts([]))
   }, [user?.id])
 
   const filtered = contacts.filter((c) => {
@@ -206,8 +200,8 @@ export default function SavedPeople() {
             </thead>
             <tbody>
               {filtered.map((c) => {
-                const fullName = `${c.firstName} ${c.lastName}`.trim()
-                const color = avatarColor(c.firstName)
+                const fullName = `${c.first_name} ${c.last_name}`.trim()
+                const color = avatarColor(c.first_name)
                 const isSelected = selected.has(c.id)
                 const location = [c.city, c.country].filter(Boolean).join(', ')
 
@@ -232,7 +226,7 @@ export default function SavedPeople() {
                     <td className="px-3 py-2.5 border-r border-gray-700/50">
                       <div className="flex items-center gap-2 min-w-[140px]">
                         <div className={`w-7 h-7 rounded-full ${color} flex items-center justify-center text-[10px] font-bold text-white shrink-0`}>
-                          {initials(c.firstName, c.lastName)}
+                          {initials(c)}
                         </div>
                         <span className="text-xs text-blue-400 hover:underline cursor-pointer whitespace-nowrap">
                           {fullName}

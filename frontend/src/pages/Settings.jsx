@@ -7,7 +7,7 @@ import {
   ChevronUp, Edit2, Target, ExternalLink, X, AlertCircle, CheckCircle2
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { changeEmail } from '../api/auth'
+import { changeEmail, getImportHistory } from '../api/auth'
 
 // ─── Sidebar structure ────────────────────────────────────────────────────────
 
@@ -277,23 +277,14 @@ function formatImportTime(isoString) {
 
 function ImportsContent({ activeTab, onTabChange }) {
   const { user } = useAuth()
-  const [importHistory, setImportHistory] = useState([])
+  const [contactImports, setContactImports] = useState([])
 
   useEffect(() => {
     if (!user?.id) return
-    const key = `apollo_import_history_${user.id}`
-    const oldKey = 'apollo_import_history'
-    // Migrate data saved before per-user scoping was added
-    const legacy = localStorage.getItem(oldKey)
-    if (legacy && !localStorage.getItem(key)) {
-      localStorage.setItem(key, legacy)
-      localStorage.removeItem(oldKey)
-    }
-    const stored = JSON.parse(localStorage.getItem(key) || '[]')
-    setImportHistory(stored)
+    getImportHistory()
+      .then((res) => setContactImports(res.data))
+      .catch(() => setContactImports([]))
   }, [activeTab, user?.id])
-
-  const contactImports = importHistory.filter((r) => r.type === 'contact')
 
   return (
     <div className="flex flex-col h-full">
@@ -331,14 +322,14 @@ function ImportsContent({ activeTab, onTabChange }) {
               </thead>
               <tbody>
                 {contactImports.map((row) => {
-                  const initials = avatarInitials(row.uploadedBy)
+                  const inits = avatarInitials(row.uploaded_by)
                   return (
                     <tr key={row.id} className="border-b border-gray-800 hover:bg-gray-900/50 transition-colors">
                       {/* Name */}
                       <td className="px-6 py-4">
                         <p className="text-sm text-white font-medium">{row.filename}</p>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          Created on {formatImportTime(row.createdAt)}
+                          Created on {formatImportTime(row.created_at)}
                         </p>
                       </td>
 
@@ -350,7 +341,7 @@ function ImportsContent({ activeTab, onTabChange }) {
                       </td>
 
                       {/* Total Records */}
-                      <td className="px-6 py-4 text-sm text-gray-300">{row.totalRecords}</td>
+                      <td className="px-6 py-4 text-sm text-gray-300">{row.total_records}</td>
 
                       {/* Skipped */}
                       <td className="px-6 py-4 text-sm text-gray-300">{row.skipped}</td>
@@ -358,7 +349,7 @@ function ImportsContent({ activeTab, onTabChange }) {
                       {/* Uploaded By */}
                       <td className="px-6 py-4">
                         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">
-                          {initials}
+                          {inits}
                         </div>
                       </td>
                     </tr>
@@ -369,7 +360,7 @@ function ImportsContent({ activeTab, onTabChange }) {
 
             {/* Pagination */}
             <div className="border-t border-gray-800 px-6 py-3 flex items-center justify-end gap-3 text-xs text-gray-400 shrink-0 mt-auto">
-              <span>1 - {contactImports.length} of {contactImports.length}</span>
+              <span>1–{contactImports.length} of {contactImports.length}</span>
               <button className="p-1 text-gray-600 cursor-default" disabled>&#8249;</button>
               <span className="w-6 h-6 flex items-center justify-center bg-gray-800 rounded text-white">1</span>
               <button className="p-1 text-gray-600 cursor-default" disabled>&#8250;</button>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Info, ChevronDown, Settings2, X, FileText, Trash2, Loader2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { importContacts } from '../api/auth'
 
 // ─── Apollo field options ─────────────────────────────────────────────────────
 
@@ -57,7 +58,7 @@ export default function ImportReview() {
   const [hideRecognised, setHideRecognised] = useState(false)
   const [importing, setImporting] = useState(false)
 
-  const handleImport = () => {
+  const handleImport = async () => {
     setImporting(true)
     const contacts = rows.map((row) => {
       const contact = {}
@@ -68,9 +69,8 @@ export default function ImportReview() {
         }
       })
       return {
-        id: Math.random().toString(36).slice(2),
-        firstName: contact['contact first name'] || '',
-        lastName: contact['contact last name'] || '',
+        first_name: contact['contact first name'] || '',
+        last_name: contact['contact last name'] || '',
         title: contact['contact title'] || '',
         company: contact['account name'] || '',
         email: contact['contact email'] || '',
@@ -85,26 +85,20 @@ export default function ImportReview() {
         mobile: contact['contact mobile phone'] || '',
       }
     })
-    const uid = user?.id
-    const peopleKey = `apollo_saved_people_${uid}`
-    const historyKey = `apollo_import_history_${uid}`
 
-    const existing = JSON.parse(localStorage.getItem(peopleKey) || '[]')
-    localStorage.setItem(peopleKey, JSON.stringify([...existing, ...contacts]))
-
-    const importRecord = {
-      id: Math.random().toString(36).slice(2),
-      type: 'contact',
-      filename: filename || 'file.csv',
-      createdAt: new Date().toISOString(),
-      totalRecords: rows.length,
-      skipped: 0,
-      uploadedBy: user?.full_name || user?.email || 'Unknown',
+    try {
+      await importContacts({
+        filename: filename || 'file.csv',
+        total_records: rows.length,
+        skipped: 0,
+        uploaded_by: user?.full_name || user?.email || 'Unknown',
+        contacts,
+      })
+      navigate('/saved-people')
+    } catch (err) {
+      console.error('Import failed', err)
+      setImporting(false)
     }
-    const history = JSON.parse(localStorage.getItem(historyKey) || '[]')
-    localStorage.setItem(historyKey, JSON.stringify([importRecord, ...history]))
-
-    setTimeout(() => navigate('/saved-people'), 600)
   }
 
   const recognisedCount = headers.filter(

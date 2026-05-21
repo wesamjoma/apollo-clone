@@ -15,4 +15,8 @@ export const login = (data) => api.post('/auth/login', data)
 export const getMe = () => api.get('/auth/me')
 export const changeEmail = (data) => api.put('/auth/change-email', data)
 
+export const importContacts = (data) => api.post('/contacts/import', data)
+export const getContacts = () => api.get('/contacts/')
+export const getImportHistory = () => api.get('/contacts/imports')
+
 export default api
